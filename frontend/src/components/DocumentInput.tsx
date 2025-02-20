@@ -6,7 +6,7 @@ function DocumentInput() {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch('http://localhost:8000/crawl/', {
+      const response = await fetch('/api/crawl/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -2,24 +2,17 @@
 FROM node:20-slim AS frontend-builder
 
 WORKDIR /app/frontend
-
-# Copy package files first for better caching
 COPY frontend/package*.json ./
-RUN npm cache clean --force && \
-    npm install --legacy-peer-deps --force
+RUN npm install --legacy-peer-deps --production
 
-# Copy only the necessary frontend files
-COPY frontend/public ./public
-COPY frontend/src ./src
-COPY frontend/tsconfig.json .
-COPY frontend/jest.config.js .
-COPY frontend/.env .
+COPY frontend/ ./
+RUN npm run build
 
-# Show more verbose output during build
-RUN npm run build --verbose
-
-# Use Python image with uv pre-installed
+# Use Python image with uv pre-installed and nginx
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+# Install nginx
+RUN apt-get update && apt-get install -y nginx
 
 WORKDIR /app
 
@@ -31,14 +24,15 @@ COPY pyproject.toml .
 RUN uv sync && uv pip install .
 ENV PATH="/root/.local/bin:/root/.uv/venv/bin:${PATH}"
 
-# Copy frontend build
-COPY --from=frontend-builder /app/frontend/build /app/frontend/build
+# Copy frontend build and nginx config
+COPY --from=frontend-builder /app/frontend/build /usr/share/nginx/html
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Add uv's bin directory to PATH
-ENV PATH="/app/.venv/bin:/root/.local/bin:/root/.uv/venv/bin:${PATH}"
+# Expose ports
+EXPOSE 80 8000
 
-# Expose port
-EXPOSE 8000
+# Create startup script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
-# Run the application
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"] 
+CMD ["/start.sh"] 

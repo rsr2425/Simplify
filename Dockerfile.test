@@ -1,0 +1,33 @@
+# Use Node.js image for frontend
+FROM node:20-slim AS frontend
+
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install --legacy-peer-deps
+
+COPY frontend/ ./
+
+# Use Python image with uv pre-installed
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+# Set up Node.js and npm
+RUN apt-get update && apt-get install -y \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+WORKDIR /app
+
+# Copy backend code
+COPY backend/ backend/
+COPY pyproject.toml .
+
+# Install backend dependencies and pytest
+RUN uv sync && uv pip install pytest && uv pip install .
+ENV PATH="/root/.local/bin:/root/.uv/venv/bin:${PATH}"
+
+# Copy frontend from builder
+COPY --from=frontend /app/frontend /app/frontend
+
+# Add uv's bin directory to PATH
+ENV PATH="/app/.venv/bin:/root/.local/bin:/root/.uv/venv/bin:${PATH}" 

@@ -10,7 +10,7 @@ function QuizGenerator({ onProblemsGenerated }: QuizGeneratorProps) {
 
   const handleGenerate = async () => {
     try {
-      const response = await fetch('http://localhost:8000/problems/', {
+      const response = await fetch('/api/problems/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
