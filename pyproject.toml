@@ -1,0 +1,22 @@
+[project]
+name = "simplify"
+version = "0.1.0"
+description = "LLM System to generate quizzes that simplify the learning process of tools and frameworks"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "chainlit>=2.0.4",
+    "numpy>=2.2.2",
+    "openai>=1.59.9",
+    "pydantic==2.10.1",
+    "pypdf2>=3.0.1",
+    "websockets>=14.2",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.27.1",
+    "pytest>=8.0.0",
+    "httpx>=0.26.0"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+python_files = ["test_*.py"]
