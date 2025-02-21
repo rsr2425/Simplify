@@ -1,15 +1,14 @@
-import pytest
 import os
 from langchain.schema import Document
-from backend.app import vectorstore
+from backend.app.vectorstore import get_vector_db
 
 def test_directory_creation():
-    """Test that the static/data directory is created"""
+    get_vector_db()
     assert os.path.exists("static/data")
     assert os.path.exists("static/data/langchain_rag_tutorial.html")
 
+# TODO remove this test when data ingrestion layer is implemented
 def test_html_content():
-    """Test that the HTML content was downloaded and contains expected content"""
     with open("static/data/langchain_rag_tutorial.html", "r", encoding="utf-8") as f:
         content = f.read()
     
@@ -22,8 +21,9 @@ def test_vector_store_similarity_search():
     # Test query
     query = "What is RAG?"
     
-    # Perform similarity search
-    results = vectorstore.vector_db.similarity_search(query, k=2)
+    # Get vector db instance and perform similarity search
+    vector_db = get_vector_db()
+    results = vector_db.similarity_search(query, k=2)
     
     # Verify we get results
     assert len(results) == 2
@@ -33,3 +33,12 @@ def test_vector_store_similarity_search():
     combined_content = " ".join([doc.page_content for doc in results]).lower()
     assert "rag" in combined_content
     assert "retrieval" in combined_content
+
+def test_vector_db_singleton():
+    """Test that get_vector_db returns the same instance each time"""
+    # Get two instances
+    instance1 = get_vector_db()
+    instance2 = get_vector_db()
+    
+    # Verify they are the same object
+    assert instance1 is instance2

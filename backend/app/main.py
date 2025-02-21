@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import random
+from backend.app.problem_generator import ProblemGenerator
 
 app = FastAPI()
 
@@ -27,12 +27,5 @@ async def crawl_documentation(input_data: UrlInput):
 
 @app.post("/problems/")
 async def generate_problems(query: UserQuery):
-    # For MVP, returning random sample questions
-    sample_questions = [
-        "What is the main purpose of this framework?",
-        "How do you install this tool?",
-        "What are the key components?",
-        "Explain the basic workflow",
-        "What are the best practices?"
-    ]
-    return {"Problems": sample_questions} 
+    problems = ProblemGenerator().generate_problems(query.user_query)
+    return {"Problems": problems} 
