@@ -1,9 +1,7 @@
 [project]
-name = "simplify"
+name = "backend"
 version = "0.1.0"
-description = "LLM System to generate quizzes that simplify the learning process of tools and frameworks"
-readme = "README.md"
-requires-python = ">=3.12"
+description = "Backend for the application"
 dependencies = [
     "chainlit>=2.0.4",
     "numpy>=2.2.2",
@@ -14,9 +12,24 @@ dependencies = [
     "fastapi>=0.110.0",
     "uvicorn>=0.27.1",
     "pytest>=8.0.0",
-    "httpx>=0.26.0"
+    "httpx>=0.26.0",
+    "langchain>=0.3.15",
+    "langchain-community>=0.3.15",
+    "langchain-openai>=0.3.2",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0", 
+    "openai>=1.12.0",
+    "pytest-dotenv>=0.5.2",
+    "unstructured",
+    "qdrant-client>=1.6.0",
 ]
 
-[tool.pytest.ini_options]
-testpaths = ["backend/tests"]
-python_files = ["test_*.py"]
+[project.optional-dependencies]
+test = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.1",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

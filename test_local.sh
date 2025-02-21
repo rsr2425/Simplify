@@ -30,6 +30,6 @@ echo -e "${BLUE}${DIVIDER}${NC}"
 
 # Run backend tests
 echo -e "${YELLOW}Running backend tests...${NC}"
-docker run simplify-test pytest backend/tests
+docker run --env-file .env simplify-test pytest backend/tests
 
 echo -e "\n${GREEN}✨ Testing complete!${NC}\n" 
