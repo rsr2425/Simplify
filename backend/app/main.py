@@ -5,7 +5,6 @@ from backend.app.problem_generator import ProblemGenerator
 
 app = FastAPI()
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # In production, replace with specific origins

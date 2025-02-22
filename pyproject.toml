@@ -2,6 +2,7 @@
 name = "backend"
 version = "0.1.0"
 description = "Backend for the application"
+requires-python = "==3.12"
 dependencies = [
     "chainlit>=2.0.4",
     "numpy>=2.2.2",
@@ -22,7 +23,11 @@ dependencies = [
     "pytest-dotenv>=0.5.2",
     "unstructured",
     "qdrant-client>=1.6.0",
+    "ipykernel",
 ]
+
+[tool.setuptools]
+py-modules = []
 
 [project.optional-dependencies]
 test = [
