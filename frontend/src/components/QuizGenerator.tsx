@@ -1,4 +1,4 @@
-import { TextField, Button, Box } from '@mui/material';
+import { TextField, Button, Box, CircularProgress } from '@mui/material';
 import { useState } from 'react';
 
 interface QuizGeneratorProps {
@@ -7,9 +7,11 @@ interface QuizGeneratorProps {
 
 function QuizGenerator({ onProblemsGenerated }: QuizGeneratorProps) {
   const [query, setQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerate = async () => {
     try {
+      setIsLoading(true);
       const response = await fetch('/api/problems/', {
         method: 'POST',
         headers: {
@@ -23,6 +25,8 @@ function QuizGenerator({ onProblemsGenerated }: QuizGeneratorProps) {
       setQuery('');
     } catch (error) {
       console.error('Error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -33,9 +37,15 @@ function QuizGenerator({ onProblemsGenerated }: QuizGeneratorProps) {
         label="Quiz topic?"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        disabled={isLoading}
       />
-      <Button variant="contained" onClick={handleGenerate}>
-        Generate
+      <Button 
+        variant="contained" 
+        onClick={handleGenerate}
+        disabled={isLoading}
+        startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
+      >
+        {isLoading ? 'Generating...' : 'Generate'}
       </Button>
     </Box>
   );
