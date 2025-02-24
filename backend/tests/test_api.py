@@ -5,7 +5,7 @@ client = TestClient(app)
 
 def test_crawl_endpoint():
     response = client.post(
-        "/crawl/",
+        "/api/crawl/",
         json={"url": "https://example.com"}
     )
     assert response.status_code == 200
@@ -13,7 +13,7 @@ def test_crawl_endpoint():
 
 def test_problems_endpoint():
     response = client.post(
-        "/problems/",
+        "/api/problems/",
         json={"user_query": "test query"}
     )
     assert response.status_code == 200
