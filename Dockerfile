@@ -13,6 +13,8 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
+RUN mkdir -p /app/static/data
+
 # Create a non-root user
 RUN useradd -m -u 1000 user
 RUN chown -R user:user /app
