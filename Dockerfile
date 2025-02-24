@@ -13,7 +13,12 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
-# Install backend dependencies and make pytest available
+# Create a non-root user
+RUN useradd -m -u 1000 user
+RUN chown -R user:user /app
+USER user
+
+# Install backend dependencies
 COPY backend/ backend/
 COPY pyproject.toml .
 RUN uv sync && uv pip install .
