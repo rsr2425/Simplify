@@ -11,32 +11,17 @@ RUN npm run build
 # Use Python image with uv pre-installed and nginx
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-RUN apt-get update && apt-get install -y nginx
-
 WORKDIR /app
-
 
 # Install backend dependencies and make pytest available
 COPY backend/ backend/
 COPY pyproject.toml .
 RUN uv sync && uv pip install .
-ENV PATH="/root/.local/bin:/root/.uv/venv/bin:${PATH}"
-
-# Set up frontend
-COPY --from=frontend-builder /app/frontend/build /usr/share/nginx/html
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Add uv's bin directory to PATH
 ENV PATH="/app/.venv/bin:/root/.local/bin:/root/.uv/venv/bin:${PATH}" 
 
-EXPOSE 80 8000
+# Set up frontend
+COPY --from=frontend-builder /app/frontend/build /app/static
 
-# Set up nginx confgi
-RUN mkdir -p /var/lib/nginx/body /var/cache/nginx
-RUN chmod -R 777 /var/lib/nginx /var/cache/nginx
-RUN chmod -R 755 /app/.venv
+EXPOSE 80
 
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
-CMD ["/start.sh"]
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "80"] 

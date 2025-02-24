@@ -12,6 +12,7 @@ docker build -t simplify .
 # Run the container
 echo "Starting container..."
 docker run -d \
+    --env-file .env \
     --name simplify \
     -p 80:80 \
     -p 8000:8000 \
