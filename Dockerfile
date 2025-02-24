@@ -31,6 +31,11 @@ ENV PATH="/app/.venv/bin:/root/.local/bin:/root/.uv/venv/bin:${PATH}"
 
 EXPOSE 80 8000
 
+# Set up nginx confgi
+RUN mkdir -p /var/lib/nginx/body /var/cache/nginx
+RUN chmod -R 777 /var/lib/nginx /var/cache/nginx
+RUN chmod -R 755 /app/.venv
+
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
