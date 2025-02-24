@@ -28,6 +28,7 @@ env/
 venv/
 ENV/
 .uv/
+uv.lock
 
 # Node/React
 node_modules/
