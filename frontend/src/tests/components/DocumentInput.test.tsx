@@ -11,7 +11,7 @@ describe('DocumentInput', () => {
     mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
   });
 
-  test('submits URL when button is clicked', async () => {
+  test('submits URL and shows success message while keeping URL in input', async () => {
     render(<DocumentInput />);
     
     const input = screen.getByLabelText('Source Documentation');
@@ -27,5 +27,35 @@ describe('DocumentInput', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: 'https://example.com' }),
     });
+
+    // Check if success message is shown
+    expect(screen.getByText('Source documentation imported successfully!')).toBeInTheDocument();
+    
+    // Verify URL is still in the input
+    expect(input).toHaveValue('https://example.com');
+  });
+
+  test('hides success message when starting to type new URL', async () => {
+    render(<DocumentInput />);
+    
+    // First submit a URL
+    const input = screen.getByLabelText('Source Documentation');
+    const button = screen.getByText('Pull Source Docs');
+    
+    await act(async () => {
+      await fireEvent.change(input, { target: { value: 'https://example.com' } });
+      await fireEvent.click(button);
+    });
+
+    // Verify success message is shown
+    expect(screen.getByText('Source documentation imported successfully!')).toBeInTheDocument();
+
+    // Start typing new URL
+    await act(async () => {
+      await fireEvent.change(input, { target: { value: 'https://new' } });
+    });
+
+    // Verify success message is hidden
+    expect(screen.queryByText('Source documentation imported successfully!')).not.toBeInTheDocument();
   });
 });

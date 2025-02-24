@@ -1,8 +1,9 @@
-import { TextField, Button, Box } from '@mui/material';
+import { TextField, Button, Box, Alert } from '@mui/material';
 import { useState } from 'react';
 
 function DocumentInput() {
   const [url, setUrl] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async () => {
     try {
@@ -14,23 +15,37 @@ function DocumentInput() {
         body: JSON.stringify({ url }),
       });
       if (!response.ok) throw new Error('Network response was not ok');
-      setUrl('');
+      setShowSuccess(true);
     } catch (error) {
       console.error('Error:', error);
     }
   };
 
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUrl(e.target.value);
+    if (showSuccess) {
+      setShowSuccess(false);
+    }
+  };
+
   return (
-    <Box sx={{ mb: 4, display: 'flex', gap: 2 }}>
-      <TextField
-        fullWidth
-        label="Source Documentation"
-        value={url}
-        onChange={(e) => setUrl(e.target.value)}
-      />
-      <Button variant="contained" onClick={handleSubmit}>
-        Pull Source Docs
-      </Button>
+    <Box sx={{ mb: 4 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <TextField
+          fullWidth
+          label="Source Documentation"
+          value={url}
+          onChange={handleUrlChange}
+        />
+        <Button variant="contained" onClick={handleSubmit}>
+          Pull Source Docs
+        </Button>
+      </Box>
+      {showSuccess && (
+        <Alert severity="success" sx={{ mt: 1 }}>
+          Source documentation imported successfully!
+        </Alert>
+      )}
     </Box>
   );
 }

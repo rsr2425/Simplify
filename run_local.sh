@@ -15,12 +15,12 @@ docker run -d \
     --env-file .env \
     --name simplify \
     -p 80:80 \
-    -p 8000:8000 \
+    -p 7860:7860 \
     simplify
 
 echo "Services started!"
-echo "Frontend available at: http://localhost"
-echo "Backend available at: http://localhost:8000"
+echo "Frontend available at: http://localhost:7860"
+echo "Backend available at: http://localhost:7860"
 echo ""
 echo "To view logs: docker logs -f simplify"
 echo "To stop: docker stop simplify" 
