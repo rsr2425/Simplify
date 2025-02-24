@@ -27,6 +27,6 @@ ENV PATH="/app/.venv/bin:/root/.local/bin:/root/.uv/venv/bin:${PATH}"
 # Set up frontend
 COPY --from=frontend-builder /app/frontend/build /app/static
 
-EXPOSE 80
+EXPOSE 7860
 
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "80"] 
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "7860"] 
