@@ -1,3 +1,4 @@
+from operator import itemgetter
 from typing import List
 import json
 
@@ -30,23 +31,33 @@ USER_ROLE_PROMPT = """
 
 
 class ProblemGenerationPipeline:
-    def __init__(self):
+    def __init__(self, return_context: bool = False, embedding_model_id: str = None):
         self.chat_prompt = ChatPromptTemplate.from_messages([
             ("system", SYSTEM_ROLE_PROMPT),
             ("user", USER_ROLE_PROMPT)
         ])
         
         self.llm = ChatOpenAI(model=MODEL, temperature=0.7)
-        self.retriever = get_vector_db().as_retriever(search_kwargs={"k": 2})
+        self.retriever = get_vector_db(embedding_model_id).as_retriever(search_kwargs={"k": 2})
         
-        self.rag_chain = (
-            {"context": self.retriever, "query": RunnablePassthrough()}
-            | self.chat_prompt
-            | self.llm
-            | StrOutputParser()
-        )
+        # TODO: This is a hack to get the context for the questions. Very messy interface.
+        self.return_context = return_context
+        if not return_context:
+            self.rag_chain = (
+                {"context": self.retriever, "query": RunnablePassthrough()}
+                | self.chat_prompt
+                | self.llm
+                | StrOutputParser()
+            )
+        else:
+            # response looks like: {response: str, context: List[Document]}
+            self.rag_chain = (
+                {"context": itemgetter("query") | self.retriever, "query": itemgetter("query")}
+                | RunnablePassthrough.assign(context=itemgetter("context"))
+                | {"response": self.chat_prompt | self.llm | StrOutputParser(), "context": itemgetter("context")}
+            )
 
-    def generate_problems(self, query: str) -> List[str]:
+    def generate_problems(self, query: str, debug: bool = False) -> List[str]:
         """
         Generate problems based on the user's query using RAG.
         
@@ -57,5 +68,11 @@ class ProblemGenerationPipeline:
             List[str]: A list of generated questions
         """
         raw_result = self.rag_chain.invoke(query)
-        result = json.loads(raw_result)
-        return result["questions"]
+        if debug:
+            print(raw_result)
+        # raw_result is a dict with keys "response" and "context" when return_context is True
+        if self.return_context:
+            return raw_result
+        # raw_result is a string when return_context is False
+        else:
+            return json.loads(raw_result)["questions"]

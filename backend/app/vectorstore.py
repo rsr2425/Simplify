@@ -11,14 +11,20 @@ from langchain_community.vectorstores import Qdrant
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.document_loaders import DirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_huggingface import HuggingFaceEmbeddings
 
 nltk.download('punkt_tab')
 nltk.download('averaged_perceptron_tagger_eng')
 
+DEFAULT_EMBEDDING_MODEL_ID = "text-embedding-3-small"
+
 # Global variable to store the singleton instance
 _vector_db_instance: Optional[Qdrant] = None
+# TODO fix bug. There's a logical error where if you change the embedding model, the vector db instance might not updated
+#   to match the new embedding model.
+_embedding_model_id: str = None
 
-def get_vector_db() -> Qdrant:
+def get_vector_db(embedding_model_id: str = None) -> Qdrant:
     """
     Factory function that returns a singleton instance of the vector database.
     Creates the instance if it doesn't exist.
@@ -37,8 +43,11 @@ def get_vector_db() -> Qdrant:
             with open(html_path, "w", encoding="utf-8") as f:
                 f.write(response.text)
 
-        # Initialize embedding model
-        embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
+        embedding_model = None
+        if embedding_model_id is None:
+            embedding_model = OpenAIEmbeddings(model=DEFAULT_EMBEDDING_MODEL_ID)
+        else:
+            embedding_model = HuggingFaceEmbeddings(model_name=embedding_model_id)
 
         # Load HTML files from static/data directory
         loader = DirectoryLoader("static/data", glob="*.html")
