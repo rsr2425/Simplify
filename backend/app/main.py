@@ -3,7 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from backend.app.problem_generator import ProblemGenerator
+from backend.app.problem_generator import ProblemGenerationPipeline
+from typing import Dict, List
 
 app = FastAPI()
 
@@ -21,6 +22,11 @@ class UrlInput(BaseModel):
 class UserQuery(BaseModel):
     user_query: str
 
+class FeedbackInput(BaseModel):
+    user_query: str
+    problems: list[str]
+    user_answers: list[str]
+
 @app.post("/api/crawl/")
 async def crawl_documentation(input_data: UrlInput):
     print(f"Received url {input_data.url}")
@@ -28,8 +34,20 @@ async def crawl_documentation(input_data: UrlInput):
 
 @app.post("/api/problems/")
 async def generate_problems(query: UserQuery):
-    problems = ProblemGenerator().generate_problems(query.user_query)
+    problems = ProblemGenerationPipeline().generate_problems(query.user_query)
     return {"Problems": problems}
+
+@app.post("/api/feedback/")
+async def submit_feedback(feedback: FeedbackInput):
+    # check if problems len is equal to user_answers len
+    if len(feedback.problems) != len(feedback.user_answers):
+        raise HTTPException(status_code=400, detail="Problems and user answers must have the same length")
+    
+    for problem, user_answer in zip(feedback.problems, feedback.user_answers):
+        print(f"Problem: {problem}")
+        print(f"User answer: {user_answer}")
+    
+    return {"status": "success"}
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="/app/static/static"), name="static")
