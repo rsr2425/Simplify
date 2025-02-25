@@ -19,7 +19,11 @@ function QuizGenerator({ onProblemsGenerated }: QuizGeneratorProps) {
         },
         body: JSON.stringify({ user_query: query }),
       });
-      if (!response.ok) throw new Error('Network response was not ok');
+
+      if (!response.ok) {
+        throw new Error('Failed to generate problems');
+      }
+
       const data = await response.json();
       onProblemsGenerated(data.Problems);
       setQuery('');
