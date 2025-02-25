@@ -22,7 +22,7 @@ echo -e "${BLUE}${DIVIDER}${NC}"
 
 # Run frontend tests
 echo -e "${YELLOW}Running frontend tests...${NC}"
-docker run simplify-test npm test --prefix frontend
+docker run --rm simplify-test npm test --prefix frontend
 
 echo -e "\n${BLUE}${DIVIDER}"
 echo -e "${BOLD}🐍 BACKEND TESTS"
@@ -30,6 +30,6 @@ echo -e "${BLUE}${DIVIDER}${NC}"
 
 # Run backend tests
 echo -e "${YELLOW}Running backend tests...${NC}"
-docker run --env-file .env simplify-test pytest backend/tests
+docker run --rm --env-file .env simplify-test pytest backend/tests
 
 echo -e "\n${GREEN}✨ Testing complete!${NC}\n" 
