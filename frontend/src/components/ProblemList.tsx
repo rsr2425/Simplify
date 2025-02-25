@@ -22,5 +22,4 @@ function ProblemList({ problems }: ProblemListProps) {
     </Paper>
   );
 }
-
 export default ProblemList;

@@ -49,5 +49,4 @@ function DocumentInput() {
     </Box>
   );
 }
-
 export default DocumentInput;
