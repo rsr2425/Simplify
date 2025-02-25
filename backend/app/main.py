@@ -64,6 +64,10 @@ async def get_feedback(request: FeedbackRequest):
         return FeedbackResponse(feedback=feedback_list)
         
     except Exception as e:
+        # log exception and stack trace
+        import traceback
+        print(f"Exception: {e}")
+        print(f"Stack trace: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Serve static files

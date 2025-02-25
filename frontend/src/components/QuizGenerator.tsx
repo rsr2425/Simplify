@@ -2,7 +2,7 @@ import { TextField, Button, Box, CircularProgress } from '@mui/material';
 import { useState } from 'react';
 
 interface QuizGeneratorProps {
-  onProblemsGenerated: (problems: string[]) => void;
+  onProblemsGenerated: (problems: string[], query: string) => void;
 }
 
 function QuizGenerator({ onProblemsGenerated }: QuizGeneratorProps) {
@@ -25,7 +25,7 @@ function QuizGenerator({ onProblemsGenerated }: QuizGeneratorProps) {
       }
 
       const data = await response.json();
-      onProblemsGenerated(data.Problems);
+      onProblemsGenerated(data.Problems, query);
       setQuery('');
     } catch (error) {
       console.error('Error:', error);

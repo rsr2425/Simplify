@@ -9,7 +9,7 @@ function ProblemList({ problems }: ProblemListProps) {
 
   return (
     <Paper sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h3">
         Generated Problems
       </Typography>
       <List>

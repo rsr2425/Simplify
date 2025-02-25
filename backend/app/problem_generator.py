@@ -8,6 +8,8 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain.output_parsers.openai_functions import JsonOutputFunctionsParser
 from backend.app.vectorstore import get_vector_db
 
+MODEL = "gpt-3.5-turbo"
+
 SYSTEM_ROLE_PROMPT = """
     You are a helpful assistant that generates questions based on a given context.
 """
@@ -26,6 +28,7 @@ USER_ROLE_PROMPT = """
     }}
 """
 
+
 class ProblemGenerationPipeline:
     def __init__(self):
         self.chat_prompt = ChatPromptTemplate.from_messages([
@@ -33,7 +36,7 @@ class ProblemGenerationPipeline:
             ("user", USER_ROLE_PROMPT)
         ])
         
-        self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+        self.llm = ChatOpenAI(model=MODEL, temperature=0.7)
         self.retriever = get_vector_db().as_retriever(search_kwargs={"k": 2})
         
         self.rag_chain = (
