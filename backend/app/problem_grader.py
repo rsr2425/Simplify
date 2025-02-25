@@ -40,7 +40,6 @@ class ProblemGradingPipeline:
         self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
         self.retriever = get_vector_db().as_retriever(search_kwargs={"k": 2})
         
-        # Build the RAG chain
         self.rag_chain = (
             {
                 "context": self.retriever, 
@@ -53,9 +52,9 @@ class ProblemGradingPipeline:
             | StrOutputParser()
         )
 
-    def grade(self, query: str, problem: str, answer: str) -> str:
+    async def grade(self, query: str, problem: str, answer: str) -> str:
         """
-        Grade a student's answer to a problem using RAG for context-aware evaluation.
+        Asynchronously grade a student's answer to a problem using RAG for context-aware evaluation.
         
         Args:
             query (str): The topic/context to use for grading
@@ -65,7 +64,7 @@ class ProblemGradingPipeline:
         Returns:
             str: Grading response indicating if the answer is correct and providing feedback
         """
-        return self.rag_chain.invoke({
+        return await self.rag_chain.ainvoke({
             "query": query,
             "problem": problem,
             "answer": answer

@@ -36,7 +36,6 @@ class ProblemGenerationPipeline:
         self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
         self.retriever = get_vector_db().as_retriever(search_kwargs={"k": 2})
         
-        # Build the RAG chain
         self.rag_chain = (
             {"context": self.retriever, "query": RunnablePassthrough()}
             | self.chat_prompt

@@ -4,7 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from backend.app.problem_generator import ProblemGenerationPipeline
+from backend.app.problem_grader import ProblemGradingPipeline
 from typing import Dict, List
+import asyncio
 
 app = FastAPI()
 
@@ -22,10 +24,14 @@ class UrlInput(BaseModel):
 class UserQuery(BaseModel):
     user_query: str
 
-class FeedbackInput(BaseModel):
+# TODO: Make this a list of {problem: str, answer: str}. Would be cleaner for data validation
+class FeedbackRequest(BaseModel):
     user_query: str
     problems: list[str]
     user_answers: list[str]
+
+class FeedbackResponse(BaseModel):
+    feedback: List[str]
 
 @app.post("/api/crawl/")
 async def crawl_documentation(input_data: UrlInput):
@@ -37,17 +43,28 @@ async def generate_problems(query: UserQuery):
     problems = ProblemGenerationPipeline().generate_problems(query.user_query)
     return {"Problems": problems}
 
-@app.post("/api/feedback/")
-async def submit_feedback(feedback: FeedbackInput):
-    # check if problems len is equal to user_answers len
-    if len(feedback.problems) != len(feedback.user_answers):
+@app.post("/api/feedback", response_model=FeedbackResponse)
+async def get_feedback(request: FeedbackRequest):
+    if len(request.problems) != len(request.user_answers):
         raise HTTPException(status_code=400, detail="Problems and user answers must have the same length")
-    
-    for problem, user_answer in zip(feedback.problems, feedback.user_answers):
-        print(f"Problem: {problem}")
-        print(f"User answer: {user_answer}")
-    
-    return {"status": "success"}
+    try:
+        grader = ProblemGradingPipeline()
+        
+        grading_tasks = [
+            grader.grade(
+                query=request.user_query,
+                problem=problem,
+                answer=user_answer,
+            )
+            for problem, user_answer in zip(request.problems, request.user_answers)
+        ]
+        
+        feedback_list = await asyncio.gather(*grading_tasks)
+        
+        return FeedbackResponse(feedback=feedback_list)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="/app/static/static"), name="static")
