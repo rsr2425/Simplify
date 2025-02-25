@@ -24,6 +24,10 @@ dependencies = [
     "unstructured",
     "qdrant-client>=1.6.0",
     "ipykernel",
+    "sentence-transformers>=3.4.1",
+    "transformers[torch]>=4.48.3",
+    "wandb>=0.19.6",
+    "datasets>=3.2.0",
 ]
 
 [tool.setuptools]
