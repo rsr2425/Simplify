@@ -32,14 +32,15 @@ USER_ROLE_PROMPT = """
 
 class ProblemGenerationPipeline:
     def __init__(self, return_context: bool = False, embedding_model_id: str = None):
-        self.chat_prompt = ChatPromptTemplate.from_messages([
-            ("system", SYSTEM_ROLE_PROMPT),
-            ("user", USER_ROLE_PROMPT)
-        ])
-        
+        self.chat_prompt = ChatPromptTemplate.from_messages(
+            [("system", SYSTEM_ROLE_PROMPT), ("user", USER_ROLE_PROMPT)]
+        )
+
         self.llm = ChatOpenAI(model=MODEL, temperature=0.7)
-        self.retriever = get_vector_db(embedding_model_id).as_retriever(search_kwargs={"k": 2})
-        
+        self.retriever = get_vector_db(embedding_model_id).as_retriever(
+            search_kwargs={"k": 2}
+        )
+
         # TODO: This is a hack to get the context for the questions. Very messy interface.
         self.return_context = return_context
         if not return_context:
@@ -52,18 +53,24 @@ class ProblemGenerationPipeline:
         else:
             # response looks like: {response: str, context: List[Document]}
             self.rag_chain = (
-                {"context": itemgetter("query") | self.retriever, "query": itemgetter("query")}
+                {
+                    "context": itemgetter("query") | self.retriever,
+                    "query": itemgetter("query"),
+                }
                 | RunnablePassthrough.assign(context=itemgetter("context"))
-                | {"response": self.chat_prompt | self.llm | StrOutputParser(), "context": itemgetter("context")}
+                | {
+                    "response": self.chat_prompt | self.llm | StrOutputParser(),
+                    "context": itemgetter("context"),
+                }
             )
 
     def generate_problems(self, query: str, debug: bool = False) -> List[str]:
         """
         Generate problems based on the user's query using RAG.
-        
+
         Args:
             query (str): The topic to generate questions about
-            
+
         Returns:
             List[str]: A list of generated questions
         """
