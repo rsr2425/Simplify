@@ -9,7 +9,7 @@ from typing import Dict, List
 import asyncio
 import logging
 import os
-from crawler import DomainCrawler
+from backend.app.crawler import DomainCrawler
 
 app = FastAPI()
 
