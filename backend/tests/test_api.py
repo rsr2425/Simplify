@@ -35,8 +35,7 @@ def test_feedback_validation_error():
     assert "same length" in response.json()["detail"]
 
 
-@pytest.mark.asyncio
-async def test_successful_feedback():
+def test_successful_feedback():
     """Test successful grading of multiple problems"""
     response = client.post(
         "/api/feedback",
