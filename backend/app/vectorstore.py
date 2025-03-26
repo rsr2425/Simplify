@@ -157,6 +157,7 @@ def store_documents(
         ids=[get_document_hash_as_uuid(doc) for doc in documents],
     )
 
+
 # TODO already probably exposing too much by returning a Qdrant object here
 def get_vector_db(embedding_model_id: str = None) -> Qdrant:
     """
