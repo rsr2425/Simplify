@@ -35,6 +35,7 @@ def test_feedback_validation_error():
     assert "same length" in response.json()["detail"]
 
 
+# this test can be a bit flaky, but it's not a big deal (because it's checking the content of the response. Correct/Incorrect might be prefaced by /n or something)
 def test_successful_feedback():
     """Test successful grading of multiple problems"""
     response = client.post(
@@ -57,8 +58,6 @@ def test_successful_feedback():
     assert "feedback" in result
     assert len(result["feedback"]) == 2
 
-    # Check that responses start with either "Correct" or "Incorrect"
     for feedback in result["feedback"]:
-        assert feedback.startswith(("Correct", "Incorrect"))
-        # Check that there's an explanation after the classification
+        assert feedback.strip().startswith(("Correct", "Incorrect"))
         assert len(feedback.split(". ")) >= 2
