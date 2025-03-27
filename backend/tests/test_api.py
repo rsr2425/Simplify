@@ -64,8 +64,7 @@ def test_successful_feedback():
 
 
 def test_topics_endpoint():
-    """Test that topics endpoint returns expected sources"""
-    response = client.post("/api/topics")
+    response = client.get("/api/topics")
     assert response.status_code == 200
     result = response.json()
     
