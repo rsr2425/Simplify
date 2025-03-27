@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  app_test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      - QDRANT_URL=http://qdrant_test:6333
+    depends_on:
+      - qdrant_test
+
+  qdrant_test:
+    image: qdrant/qdrant
+    ports:
+      - "6335:6333"  # Different port to avoid conflicts with main instance
+      - "6336:6334"
+    volumes:
+      - qdrant_test_storage:/qdrant/storage
+
+volumes:
+  qdrant_test_storage: 
