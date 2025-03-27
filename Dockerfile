@@ -22,6 +22,8 @@ RUN mkdir -p /app/static/data
 # Create a non-root user
 RUN useradd -m -u 1000 user
 RUN chown -R user:user /app
+RUN mkdir -p /data && chown -R user:user /data
+
 USER user
 
 # Install backend dependencies
