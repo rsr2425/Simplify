@@ -19,7 +19,7 @@ describe('QuizGenerator', () => {
   test('generates problems when button is clicked', async () => {
     render(<QuizGenerator onProblemsGenerated={mockOnProblemsGenerated} />);
     
-    const input = screen.getByLabelText('Quiz topic?');
+    const input = screen.getByLabelText('Quiz focus?');
     const button = screen.getByText('Generate');
     
     await act(async () => {
