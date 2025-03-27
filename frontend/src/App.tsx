@@ -1,8 +1,9 @@
-import { Container, CssBaseline, ThemeProvider, createTheme, Button, Box, Typography, Alert } from '@mui/material';
+import { Container, CssBaseline, ThemeProvider, createTheme, Button, Box, Typography, Alert, CircularProgress } from '@mui/material';
 import Header from './components/Header';
 import DocumentInput from './components/DocumentInput';
 import QuizGenerator from './components/QuizGenerator';
 import ProblemAnswer from './components/ProblemAnswer';
+import Topics from './components/Topics';
 import { useState } from 'react';
 import { Problem } from './types/Problem';
 
@@ -25,6 +26,8 @@ function App() {
   const [problems, setProblems] = useState<ProblemWithFeedback[]>([]);
   const [quizTopic, setQuizTopic] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState<string>('');
 
   const handleProblemsGenerated = (newProblems: string[], query: string) => {
     const problemObjects = newProblems.map(question => ({ question }));
@@ -40,9 +43,14 @@ function App() {
     });
   };
 
+  const handleTopicChange = (topic: string) => {
+    setSelectedTopic(topic);
+  };
+
   const handleSubmit = async () => {
     try {
       setError(null);
+      setIsSubmitting(true);
       
       // Validate that all problems have answers
       const unansweredProblems = problems.some(p => !p.userAnswer);
@@ -58,8 +66,9 @@ function App() {
         },
         body: JSON.stringify({
           user_query: quizTopic,
+          selected_topic: selectedTopic,
           problems: problems.map(p => p.question),
-          user_answers: problems.map(p => p.userAnswer as string) // We can safely cast since we validated above
+          user_answers: problems.map(p => p.userAnswer as string)
         })
       });
 
@@ -78,6 +87,8 @@ function App() {
       );
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -87,6 +98,7 @@ function App() {
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Header />
         <DocumentInput />
+        <Topics onTopicChange={handleTopicChange} />
         <QuizGenerator onProblemsGenerated={handleProblemsGenerated} />
         
         {error && (
@@ -116,15 +128,17 @@ function App() {
         ))}
 
         {problems.length > 0 && (
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
             <Button
               variant="contained"
               color="primary"
               size="large"
               onClick={handleSubmit}
+              disabled={isSubmitting}
             >
-              Submit for Feedback
+              {isSubmitting ? 'Submitting...' : 'Submit for Feedback'}
             </Button>
+            {isSubmitting && <CircularProgress size={24} />}
           </Box>
         )}
       </Container>

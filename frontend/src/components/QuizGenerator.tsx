@@ -38,7 +38,7 @@ function QuizGenerator({ onProblemsGenerated }: QuizGeneratorProps) {
     <Box sx={{ mb: 4, display: 'flex', gap: 2 }}>
       <TextField
         fullWidth
-        label="Quiz topic?"
+        label="Quiz focus?"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         disabled={isLoading}

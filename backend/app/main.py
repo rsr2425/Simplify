@@ -90,7 +90,7 @@ async def get_feedback(request: FeedbackRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/topics", response_model=TopicsResponse)
+@app.get("/api/topics", response_model=TopicsResponse)
 async def get_topics():
     sources = get_all_unique_source_of_docs_in_collection_DUMB()
     return {"sources": sources}
