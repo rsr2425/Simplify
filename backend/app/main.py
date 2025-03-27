@@ -10,6 +10,7 @@ import asyncio
 import logging
 import os
 from backend.app.crawler import DomainCrawler
+from backend.app.vectorstore import get_all_unique_source_of_docs_in_collection_DUMB
 
 app = FastAPI()
 
@@ -41,8 +42,12 @@ class FeedbackResponse(BaseModel):
     feedback: List[str]
 
 
-@app.post("/api/crawl/")
-async def crawl_documentation(input_data: UrlInput):
+class TopicsResponse(BaseModel):
+    sources: List[str]
+
+
+@app.post("/api/ingest/")
+async def ingest_documentation(input_data: UrlInput):
     print(f"Received url {input_data.url}")
     return {"status": "received"}
 
@@ -83,6 +88,12 @@ async def get_feedback(request: FeedbackRequest):
         print(f"Exception: {e}")
         print(f"Stack trace: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/topics", response_model=TopicsResponse)
+async def get_topics():
+    sources = get_all_unique_source_of_docs_in_collection_DUMB()
+    return {"sources": sources}
 
 
 # Serve static files

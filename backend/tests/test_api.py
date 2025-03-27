@@ -6,7 +6,7 @@ client = TestClient(app)
 
 
 def test_crawl_endpoint():
-    response = client.post("/api/crawl/", json={"url": "https://example.com"})
+    response = client.post("/api/ingest/", json={"url": "https://example.com"})
     assert response.status_code == 200
     assert response.json() == {"status": "received"}
 
@@ -61,3 +61,14 @@ def test_successful_feedback():
     for feedback in result["feedback"]:
         assert feedback.strip().startswith(("Correct", "Incorrect"))
         assert len(feedback.split(". ")) >= 2
+
+
+def test_topics_endpoint():
+    """Test that topics endpoint returns expected sources"""
+    response = client.post("/api/topics")
+    assert response.status_code == 200
+    result = response.json()
+    
+    assert "sources" in result
+    assert len(result["sources"]) == 1
+    assert result["sources"][0] == "LangChain RAG Tutorial"

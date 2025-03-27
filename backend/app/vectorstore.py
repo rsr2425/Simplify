@@ -43,38 +43,6 @@ _embedding_model: Optional[Union[OpenAIEmbeddings, HuggingFaceEmbeddings]] = Non
 _embedding_model_id: str = None
 
 
-def _get_qdrant_client():
-    global _qdrant_client_instance
-
-    if _qdrant_client_instance is None:
-        if (
-            os.environ.get("QDRANT_URL") is None
-            or os.environ.get("QDRANT_API_KEY") is None
-        ):
-            logger.warning(
-                "QDRANT_URL or QDRANT_API_KEY is not set. Defaulting to local memory vector store."
-            )
-
-            os.makedirs(LOCAL_QDRANT_PATH, exist_ok=True)
-            _qdrant_client_instance = QdrantClient(path=LOCAL_QDRANT_PATH)
-            # _qdrant_client_instance = QdrantClient(":memory:")
-            return _qdrant_client_instance
-
-        logger.info(
-            f"Attempting to connect to Qdrant at {os.environ.get("QDRANT_URL")}"
-        )
-        try:
-            _qdrant_client_instance = QdrantClient(
-                url=os.environ.get("QDRANT_URL"),
-                api_key=os.environ.get("QDRANT_API_KEY"),
-            )
-            logger.info("Successfully connected to Qdrant Cloud")
-        except Exception as e:
-            logger.error(f"Failed to connect to Qdrant Cloud: {str(e)}")
-            raise e
-    return _qdrant_client_instance
-
-
 def _initialize_vector_db():
     os.makedirs("static/data", exist_ok=True)
 
@@ -112,10 +80,44 @@ def _initialize_vector_db():
     )
 
 
-def get_all_unique_source_docs_in_collection(
-    collection_name: str, client: QdrantClient, limit: int = 1000, offset: int = 0
+def get_qdrant_client():
+    global _qdrant_client_instance
+
+    if _qdrant_client_instance is None:
+        if (
+            os.environ.get("QDRANT_URL") is None
+            or os.environ.get("QDRANT_API_KEY") is None
+        ):
+            logger.warning(
+                "QDRANT_URL or QDRANT_API_KEY is not set. Defaulting to local memory vector store."
+            )
+
+            os.makedirs(LOCAL_QDRANT_PATH, exist_ok=True)
+            _qdrant_client_instance = QdrantClient(path=LOCAL_QDRANT_PATH)
+            # _qdrant_client_instance = QdrantClient(":memory:")
+            return _qdrant_client_instance
+
+        logger.info(
+            f"Attempting to connect to Qdrant at {os.environ.get("QDRANT_URL")}"
+        )
+        try:
+            _qdrant_client_instance = QdrantClient(
+                url=os.environ.get("QDRANT_URL"),
+                api_key=os.environ.get("QDRANT_API_KEY"),
+            )
+            logger.info("Successfully connected to Qdrant Cloud")
+        except Exception as e:
+            logger.error(f"Failed to connect to Qdrant Cloud: {str(e)}")
+            raise e
+    return _qdrant_client_instance
+
+
+def get_all_unique_source_of_docs_in_collection(
+    collection_name: str = PROBLEMS_REFERENCE_COLLECTION_NAME,
+    limit: int = 1000,
+    offset: int = 0,
 ) -> List[Document]:
-    response = client.scroll(
+    response = get_qdrant_client().scroll(
         collection_name=collection_name,
         limit=limit,
         offset=offset,
@@ -128,12 +130,29 @@ def get_all_unique_source_docs_in_collection(
             if "source" in point.payload:
                 result.add(point.payload["source"])
         offset = response[1]
-        response = client.scroll(
+        response = get_qdrant_client().scroll(
             collection_name=collection_name,
             limit=limit,
             offset=offset + limit,
         )
     return list(result)
+
+
+# TODO This is a dumb hack to get around Qdrant client restrictions when using local file storage.
+# Instead of using the client directly, we use QdrantVectorStore's similarity search 
+# with a dummy query to get all documents, then extract unique sources.
+def get_all_unique_source_of_docs_in_collection_DUMB(
+    collection_name: str = PROBLEMS_REFERENCE_COLLECTION_NAME,
+) -> List[str]:
+    vector_store = get_vector_db()
+    # Use a very generic query that should match everything
+    docs = vector_store.similarity_search("",k=1000)
+    
+    sources = set()
+    for doc in docs:
+        if doc.metadata and "title" in doc.metadata:
+            sources.add(doc.metadata["title"])
+    return list(sources)
 
 
 def store_documents(
@@ -145,7 +164,7 @@ def store_documents(
     assert _vector_db_instance is not None, "Vector database instance not initialized"
 
     embedding_model = get_embedding_model(embedding_model_id)
-    client = _get_qdrant_client()
+    client = get_qdrant_client()
 
     _vector_db_instance.add_documents(
         documents=documents,
@@ -181,7 +200,7 @@ def get_vector_db(embedding_model_id: str = None) -> QdrantVectorStore:
         need_to_initialize_db = False
         embedding_model = get_embedding_model(embedding_model_id)
 
-        client = _get_qdrant_client()
+        client = get_qdrant_client()
 
         if not check_collection_exists(client, PROBLEMS_REFERENCE_COLLECTION_NAME):
             client.create_collection(

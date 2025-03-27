@@ -4,7 +4,7 @@ import pytest
 import requests
 
 from langchain.schema import Document
-from backend.app.vectorstore import get_vector_db, _get_qdrant_client
+from backend.app.vectorstore import get_vector_db, get_qdrant_client
 
 
 def test_directory_creation():
@@ -72,7 +72,7 @@ def test_qdrant_cloud_connection():
         print(f"Port: {parsed_url.port}")
         print(f"Path: {parsed_url.path}")
 
-        client = _get_qdrant_client()
+        client = get_qdrant_client()
         client.get_collections()
         assert True, "Connection successful"
     except Exception as e:
