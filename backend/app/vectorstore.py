@@ -8,11 +8,10 @@ import os
 import requests
 import nltk
 import logging
-import uuid
-import hashlib
+import requests
 
-from typing import Optional, List
-from langchain_community.vectorstores import Qdrant
+from typing import Optional, List, Union
+from langchain_qdrant import QdrantVectorStore
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.document_loaders import DirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -39,9 +38,8 @@ logger = logging.getLogger(__name__)
 
 # Global variable to store the singleton instance
 _qdrant_client_instance: Optional[QdrantClient] = None
-_vector_db_instance: Optional[Qdrant] = None
-# TODO fix bug. There's a logical error where if you change the embedding model, the vector db instance might not updated
-#   to match the new embedding model.
+_vector_db_instance: Optional[QdrantVectorStore] = None
+_embedding_model: Optional[Union[OpenAIEmbeddings, HuggingFaceEmbeddings]] = None
 _embedding_model_id: str = None
 
 
@@ -59,15 +57,25 @@ def _get_qdrant_client():
 
             os.makedirs(LOCAL_QDRANT_PATH, exist_ok=True)
             _qdrant_client_instance = QdrantClient(path=LOCAL_QDRANT_PATH)
+            # _qdrant_client_instance = QdrantClient(":memory:")
+            return _qdrant_client_instance
 
-        QDRANT_URL = os.environ.get("QDRANT_URL")
-        QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY")
-
-        _qdrant_client_instance = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+        logger.info(
+            f"Attempting to connect to Qdrant at {os.environ.get("QDRANT_URL")}"
+        )
+        try:
+            _qdrant_client_instance = QdrantClient(
+                url=os.environ.get("QDRANT_URL"),
+                api_key=os.environ.get("QDRANT_API_KEY"),
+            )
+            logger.info("Successfully connected to Qdrant Cloud")
+        except Exception as e:
+            logger.error(f"Failed to connect to Qdrant Cloud: {str(e)}")
+            raise e
     return _qdrant_client_instance
 
 
-def _initialize_vector_db(embedding_model):
+def _initialize_vector_db():
     os.makedirs("static/data", exist_ok=True)
 
     html_path = "static/data/langchain_rag_tutorial.html"
@@ -91,7 +99,6 @@ def _initialize_vector_db(embedding_model):
             category="documentation",
             version="1.0",
             language="en",
-            original_source=doc.metadata.get("source"),
         )
         for doc in documents
     ]
@@ -99,11 +106,9 @@ def _initialize_vector_db(embedding_model):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     split_chunks = text_splitter.split_documents(enriched_docs)
 
-    client = _get_qdrant_client()
     store_documents(
         split_chunks,
         PROBLEMS_REFERENCE_COLLECTION_NAME,
-        client,
     )
 
 
@@ -134,32 +139,38 @@ def get_all_unique_source_docs_in_collection(
 def store_documents(
     documents: List[Document],
     collection_name: str,
-    client: QdrantClient,
-    embedding_model=None,
+    embedding_model_id: str = None,
 ):
-    if embedding_model is None:
-        embedding_model = OpenAIEmbeddings(model=DEFAULT_EMBEDDING_MODEL_ID)
+    global _vector_db_instance
+    assert _vector_db_instance is not None, "Vector database instance not initialized"
 
-    if not check_collection_exists(client, collection_name):
-        client.create_collection(
-            collection_name,
-            vectors_config=VectorParams(
-                size=DEFAULT_VECTOR_DIMENSIONS, distance=DEFAULT_VECTOR_DISTANCE
-            ),
-        )
+    embedding_model = get_embedding_model(embedding_model_id)
+    client = _get_qdrant_client()
 
-    vectorstore = Qdrant(
-        client=client, collection_name=collection_name, embeddings=embedding_model
-    )
-
-    vectorstore.add_documents(
+    _vector_db_instance.add_documents(
         documents=documents,
         ids=[get_document_hash_as_uuid(doc) for doc in documents],
     )
 
 
-# TODO already probably exposing too much by returning a Qdrant object here
-def get_vector_db(embedding_model_id: str = None) -> Qdrant:
+def get_embedding_model(embedding_model_id: str = None):
+    """
+    Factory function that returns a singleton instance of the embedding model.
+    Creates the instance if it doesn't exist.
+    """
+    global _embedding_model, _embedding_model_id
+
+    if _embedding_model is None or embedding_model_id != _embedding_model_id:
+        if embedding_model_id is None:
+            _embedding_model = OpenAIEmbeddings(model=DEFAULT_EMBEDDING_MODEL_ID)
+        else:
+            _embedding_model = HuggingFaceEmbeddings(model_name=embedding_model_id)
+        _embedding_model_id = embedding_model_id
+
+    return _embedding_model
+
+
+def get_vector_db(embedding_model_id: str = None) -> QdrantVectorStore:
     """
     Factory function that returns a singleton instance of the vector database.
     Creates the instance if it doesn't exist.
@@ -167,21 +178,45 @@ def get_vector_db(embedding_model_id: str = None) -> Qdrant:
     global _vector_db_instance
 
     if _vector_db_instance is None:
-        embedding_model = None
-        if embedding_model_id is None:
-            embedding_model = OpenAIEmbeddings(model=DEFAULT_EMBEDDING_MODEL_ID)
-        else:
-            embedding_model = HuggingFaceEmbeddings(model_name=embedding_model_id)
+        need_to_initialize_db = False
+        embedding_model = get_embedding_model(embedding_model_id)
 
         client = _get_qdrant_client()
-        collection_info = client.get_collection(PROBLEMS_REFERENCE_COLLECTION_NAME)
-        if collection_info.vectors_count is None or collection_info.vectors_count == 0:
-            _initialize_vector_db(embedding_model)
 
-        _vector_db_instance = Qdrant.from_existing_collection(
+        if not check_collection_exists(client, PROBLEMS_REFERENCE_COLLECTION_NAME):
+            client.create_collection(
+                PROBLEMS_REFERENCE_COLLECTION_NAME,
+                vectors_config=VectorParams(
+                    size=DEFAULT_VECTOR_DIMENSIONS, distance=DEFAULT_VECTOR_DISTANCE
+                ),
+            )
+            need_to_initialize_db = True
+
+        os.makedirs(LOCAL_QDRANT_PATH, exist_ok=True)
+
+        # TODO temp. Need to close and reopen client to avoid RuntimeError: Storage folder /data/qdrant_db is already accessed by another instance of Qdrant client. If you require concurrent access, use Qdrant server instead.
+        #   Better solution is to use Qdrant server instead of local file storage, but I'm not sure I can run Docker Compose in Hugging Face Spaces.
+        client.close()
+        _vector_db_instance = QdrantVectorStore.from_existing_collection(
+            # client=client,
+            # TODO temp. If this works, go file bug with langchain-qdrant
+            # location=":memory:",
+            path=LOCAL_QDRANT_PATH,
             collection_name=PROBLEMS_REFERENCE_COLLECTION_NAME,
-            embedding_model=embedding_model,
-            client=client,
+            embedding=embedding_model,
         )
+        # TODO super hacky, but maybe I don't need client anymore? I'll just try to use QdrantVectorStore
+        # just really trying not to instantiate a new client to access local path
+        # because as long as QdrantVectorStore is instantiated, it will use the same client it created on the backend
+        client = None
+
+        if need_to_initialize_db:
+            _initialize_vector_db()
+
+        # vector_store = QdrantVectorStore(
+        #     client=client,
+        #     collection_name=PROBLEMS_REFERENCE_COLLECTION_NAME,
+        #     embedding=embedding_model,
+        # )
 
     return _vector_db_instance

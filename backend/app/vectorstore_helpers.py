@@ -7,8 +7,12 @@ from typing import List
 
 
 def check_collection_exists(client: QdrantClient, collection_name: str) -> bool:
-    """Check if a collection exists in Qdrant."""
-    return client.get_collection(collection_name) is not None
+    try:
+        # this is dumb, but it works. Not sure why get_collection raises an error if the collection doesn't exist.
+        client.get_collection(collection_name) is not None
+        return True
+    except ValueError:
+        return False
 
 
 def get_document_hash_as_uuid(doc):

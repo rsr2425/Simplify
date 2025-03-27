@@ -11,6 +11,10 @@ RUN npm run build
 # Use Python image with uv pre-installed
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
+# Add DNS configuration
+# RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
+#     echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+
 # Set up Node.js and npm
 RUN apt-get update && apt-get install -y \
     curl \
