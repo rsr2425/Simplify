@@ -1,4 +1,4 @@
-import { Container, CssBaseline, ThemeProvider, createTheme, Button, Box, Typography, Alert, CircularProgress } from '@mui/material';
+import { Container, CssBaseline, ThemeProvider, createTheme, Button, Box, Typography, Alert, CircularProgress, Grid } from '@mui/material';
 import Header from './components/Header';
 import DocumentInput from './components/DocumentInput';
 import QuizGenerator from './components/QuizGenerator';
@@ -98,8 +98,14 @@ function App() {
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Header />
         <DocumentInput />
-        <Topics onTopicChange={handleTopicChange} />
-        <QuizGenerator onProblemsGenerated={handleProblemsGenerated} />
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid item xs={12} md={4}>
+            <Topics onTopicChange={handleTopicChange} />
+          </Grid>
+          <Grid item xs={12} md={8}>
+            <QuizGenerator onProblemsGenerated={handleProblemsGenerated} />
+          </Grid>
+        </Grid>
         
         {error && (
           <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
