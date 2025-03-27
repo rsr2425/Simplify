@@ -37,7 +37,6 @@ def test_feedback_validation_error():
 
 # this test can be a bit flaky, but it's not a big deal (because it's checking the content of the response. Correct/Incorrect might be prefaced by /n or something)
 def test_successful_feedback():
-    """Test successful grading of multiple problems"""
     response = client.post(
         "/api/feedback",
         json={
@@ -67,7 +66,7 @@ def test_topics_endpoint():
     response = client.get("/api/topics")
     assert response.status_code == 200
     result = response.json()
-    
+
     assert "sources" in result
     assert len(result["sources"]) == 1
     assert result["sources"][0] == "LangChain RAG Tutorial"

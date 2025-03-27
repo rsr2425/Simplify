@@ -139,15 +139,15 @@ def get_all_unique_source_of_docs_in_collection(
 
 
 # TODO This is a dumb hack to get around Qdrant client restrictions when using local file storage.
-# Instead of using the client directly, we use QdrantVectorStore's similarity search 
+# Instead of using the client directly, we use QdrantVectorStore's similarity search
 # with a dummy query to get all documents, then extract unique sources.
 def get_all_unique_source_of_docs_in_collection_DUMB(
     collection_name: str = PROBLEMS_REFERENCE_COLLECTION_NAME,
 ) -> List[str]:
     vector_store = get_vector_db()
     # Use a very generic query that should match everything
-    docs = vector_store.similarity_search("",k=1000)
-    
+    docs = vector_store.similarity_search("", k=1000)
+
     sources = set()
     for doc in docs:
         if doc.metadata and "title" in doc.metadata:
