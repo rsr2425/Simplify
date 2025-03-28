@@ -106,12 +106,6 @@ function App() {
             <QuizGenerator onProblemsGenerated={handleProblemsGenerated} />
           </Grid>
         </Grid>
-        
-        {error && (
-          <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-            {error}
-          </Alert>
-        )}
 
         {problems.map((problem, index) => (
           <Box key={index} sx={{ mb: 4 }}>
@@ -132,6 +126,12 @@ function App() {
             )}
           </Box>
         ))}
+        
+        {error && (
+          <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         {problems.length > 0 && (
           <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
