@@ -8,18 +8,42 @@ from scrapy.utils.project import get_project_settings
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
+"""
+A web crawler module for extracting content from documentation websites.
+This module provides classes for crawling a domain and extracting main content
+from web pages, saving the results as text files.
+"""
+
 logger = logging.getLogger(__name__)
 
 
 class WebsiteSpider(CrawlSpider):
+    """
+    A Scrapy spider for crawling documentation websites and extracting content.
+    
+    This spider follows links within the allowed domain and extracts the main content
+    from each page, saving it to a text file. It attempts to find content within <main>,
+    <article> or content div tags, falling back to the full body if none are found.
+
+    Args:
+        start_url (str): The URL where crawling should begin
+        output_dir (str): Directory where extracted content should be saved
+        *args: Additional positional arguments passed to CrawlSpider
+        **kwargs: Additional keyword arguments passed to CrawlSpider
+    """
+
     name = "website_spider"
 
     def __init__(self, start_url, output_dir, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
         self.start_urls = [start_url]
         self.allowed_domains = [urlparse(start_url).netloc]
         self.output_dir = output_dir
 
-        # Define rules for link extraction
+        os.makedirs(output_dir, exist_ok=True)
+        logger.info(f"Created output directory: {output_dir}")
+
         self.rules = (
             Rule(
                 LinkExtractor(allow_domains=self.allowed_domains),
@@ -28,9 +52,17 @@ class WebsiteSpider(CrawlSpider):
             ),
         )
 
-        super().__init__(*args, **kwargs)
 
     def parse_item(self, response):
+        """
+        Parse a webpage and extract its content.
+
+        Args:
+            response: The Scrapy response object containing the webpage
+
+        The extracted content is saved to a text file in the output directory,
+        including the page URL, title and main content.
+        """
         try:
             # Parse the HTML with BeautifulSoup
             soup = BeautifulSoup(response.body, "html.parser")
@@ -76,15 +108,30 @@ class WebsiteSpider(CrawlSpider):
 
 
 class DomainCrawler:
+    """
+    High-level crawler class for extracting content from a documentation website.
+
+    This class provides a simple interface for crawling a website and extracting its
+    content. It configures and runs a Scrapy crawler with sensible defaults for
+    crawling documentation sites.
+
+    Example:
+        crawler = DomainCrawler("https://docs.example.com")
+        crawler.start()  # Crawls the site and saves content to ./crawled_content/
+
+    Args:
+        start_url (str): The URL where crawling should begin
+        output_dir (str, optional): Directory where extracted content should be saved.
+            Defaults to "crawled_content"
+    """
+
     def __init__(self, start_url, output_dir="crawled_content"):
         self.start_url = start_url
         self.domain = urlparse(start_url).netloc
         self.output_dir = output_dir
 
-        # Create output directory if it doesn't exist
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-            logger.info(f"Created output directory: {output_dir}")
+        os.makedirs(output_dir, exist_ok=True)
+        logger.info(f"Created output directory: {output_dir}")
 
         # Configure Scrapy settings
         self.settings = get_project_settings()
@@ -100,7 +147,12 @@ class DomainCrawler:
         )
 
     def start(self):
-        """Start the crawling process"""
+        """
+        Start the crawling process.
+        
+        This method initiates the crawler and blocks until crawling is complete.
+        The extracted content will be saved to the configured output directory.
+        """
         logger.info(f"Starting crawl from {self.start_url}")
 
         process = CrawlerProcess(self.settings)

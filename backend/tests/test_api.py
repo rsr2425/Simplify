@@ -1,6 +1,5 @@
 from fastapi.testclient import TestClient
 from backend.app.main import app
-import pytest
 
 client = TestClient(app)
 
@@ -8,7 +7,7 @@ client = TestClient(app)
 def test_crawl_endpoint():
     response = client.post("/api/ingest/", json={"url": "https://example.com"})
     assert response.status_code == 200
-    assert response.json() == {"status": "received"}
+    assert response.json() == {"status": "RECEIVED"}
 
 
 def test_problems_endpoint():

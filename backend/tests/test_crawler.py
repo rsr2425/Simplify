@@ -1,10 +1,9 @@
-import pytest
 import os
+import pytest
 from unittest.mock import Mock, patch
 from bs4 import BeautifulSoup
-from scrapy.http import Response, Request, TextResponse
-from backend.app.crawler import DomainCrawler, WebsiteSpider
-
+from scrapy.http import Response, Request
+from backend.app.crawler import WebsiteSpider, DomainCrawler
 
 @pytest.fixture
 def sample_html():
@@ -14,124 +13,121 @@ def sample_html():
         <body>
             <main>
                 <h1>Main Content</h1>
-                <p>This is the main content of the page.</p>
+                <p>This is the main content.</p>
             </main>
         </body>
     </html>
     """
 
-
 @pytest.fixture
-def crawler():
-    return DomainCrawler("https://example.com", output_dir="test_output")
+def output_dir(tmp_path):
+    """Create a temporary directory for test outputs"""
+    return str(tmp_path / "test_crawled_content")
 
+def test_website_spider_initialization():
+    """Test WebsiteSpider initialization with correct parameters"""
+    start_url = "https://example.com"
+    output_dir = "test_output"
+    
+    spider = WebsiteSpider(start_url=start_url, output_dir=output_dir)
+    
+    assert spider.start_urls == [start_url]
+    assert spider.allowed_domains == ["example.com"]
+    assert spider.output_dir == output_dir
+    assert len(spider.rules) == 1
 
-@pytest.fixture
-def spider():
-    return WebsiteSpider(start_url="https://example.com", output_dir="test_output")
+def test_parse_item_with_main_content(sample_html, output_dir):
+    """Test parsing a page with main content section"""
+    start_url = "https://example.com"
+    spider = WebsiteSpider(start_url=start_url, output_dir=output_dir)
+    
+    # Create a mock response
+    mock_response = Mock(spec=Response)
+    mock_response.url = "https://example.com/test"
+    mock_response.body = sample_html.encode('utf-8')
+    
+    # Process the mock response
+    spider.parse_item(mock_response)
+    
+    # Check if file was created and contains correct content
+    files = os.listdir(output_dir)
+    assert len(files) == 1
+    
+    with open(os.path.join(output_dir, files[0]), 'r', encoding='utf-8') as f:
+        content = f.read()
+        assert "Test Page" in content
+        assert "Main Content" in content
+        assert "This is the main content" in content
+        assert "URL: https://example.com/test" in content
 
+def test_parse_item_without_main_content(output_dir):
+    """Test parsing a page without main content section"""
+    html_without_main = """
+    <html>
+        <head><title>No Main Page</title></head>
+        <body>
+            <div>Some body content</div>
+        </body>
+    </html>
+    """
+    
+    start_url = "https://example.com"
+    spider = WebsiteSpider(start_url=start_url, output_dir=output_dir)
+    
+    mock_response = Mock(spec=Response)
+    mock_response.url = "https://example.com/no-main"
+    mock_response.body = html_without_main.encode('utf-8')
+    
+    spider.parse_item(mock_response)
+    
+    files = os.listdir(output_dir)
+    assert len(files) == 1
+    
+    with open(os.path.join(output_dir, files[0]), 'r', encoding='utf-8') as f:
+        content = f.read()
+        assert "No Main Page" in content
+        assert "Some body content" in content
 
-# def test_crawler_initialization(crawler):
-#     assert crawler.start_url == "https://example.com"
-#     assert crawler.domain == "example.com"
-#     assert crawler.output_dir == "test_output"
-#     assert os.path.exists("test_output")
+def test_domain_crawler_initialization():
+    """Test DomainCrawler initialization"""
+    start_url = "https://example.com"
+    output_dir = "test_output"
+    
+    crawler = DomainCrawler(start_url=start_url, output_dir=output_dir)
+    
+    assert crawler.start_url == start_url
+    assert crawler.domain == "example.com"
+    assert crawler.output_dir == output_dir
+    assert crawler.settings.get('BOT_NAME') == "website_crawler"
+    assert crawler.settings.get('ROBOTSTXT_OBEY') is True
+    assert crawler.settings.get('CONCURRENT_REQUESTS') == 16
+    assert crawler.settings.get('DOWNLOAD_DELAY') == 1
 
-#     # Test Scrapy settings
-#     assert crawler.settings.get('BOT_NAME') == 'website_crawler'
-#     assert crawler.settings.get('ROBOTSTXT_OBEY') is True
-#     assert crawler.settings.get('DOWNLOAD_DELAY') == 1
+@patch('backend.app.crawler.CrawlerProcess')
+def test_domain_crawler_start(mock_crawler_process):
+    """Test starting the domain crawler"""
+    start_url = "https://example.com"
+    output_dir = "test_output"
+    
+    crawler = DomainCrawler(start_url=start_url, output_dir=output_dir)
+    crawler.start()
+    
+    # Verify that CrawlerProcess was instantiated and crawl was started
+    mock_crawler_process.assert_called_once_with(crawler.settings)
+    mock_crawler_process.return_value.crawl.assert_called_once()
+    mock_crawler_process.return_value.start.assert_called_once()
 
-
-def create_response(url, body):
-    request = Request(url=url)
-    return TextResponse(
-        url=url, body=body.encode("utf-8"), encoding="utf-8", request=request
-    )
-
-
-# def test_spider_parse_with_main_content(spider, sample_html):
-#     url = "https://example.com/test"
-#     response = create_response(url, sample_html)
-
-#     # Process the page
-#     list(spider.parse_item(response))
-
-#     # Check if file was created
-#     files = os.listdir(spider.output_dir)
-#     assert len(files) == 1
-
-#     # Read the saved file
-#     with open(os.path.join(spider.output_dir, files[0]), 'r', encoding='utf-8') as f:
-#         content = f.read()
-
-#     # Verify content
-#     assert "URL: https://example.com/test" in content
-#     assert "Title: Test Page" in content
-#     assert "Main Content" in content
-#     assert "This is the main content of the page." in content
-
-# def test_spider_parse_without_main_content(spider):
-#     html_without_main = """
-#     <html>
-#         <head><title>No Main</title></head>
-#         <body>
-#             <div>Some body content</div>
-#         </body>
-#     </html>
-#     """
-
-#     url = "https://example.com/no-main"
-#     response = create_response(url, html_without_main)
-
-#     # Process the page
-#     list(spider.parse_item(response))
-
-#     files = os.listdir(spider.output_dir)
-#     assert len(files) == 1
-
-#     with open(os.path.join(spider.output_dir, files[0]), 'r', encoding='utf-8') as f:
-#         content = f.read()
-
-#     assert "URL: https://example.com/no-main" in content
-#     assert "Title: No Main" in content
-#     assert "Some body content" in content
-
-# def test_spider_parse_with_invalid_html(spider):
-#     invalid_html = "<invalid><<html>"
-#     url = "https://example.com/invalid"
-#     response = create_response(url, invalid_html)
-
-#     # Process should not raise an exception
-#     list(spider.parse_item(response))
-
-#     # Should still create a file
-#     files = os.listdir(spider.output_dir)
-#     assert len(files) == 1
-
-# @patch('scrapy.crawler.CrawlerProcess')
-# def test_start_crawling(mock_crawler_process_class, crawler):
-#     # Configure the mock
-#     mock_process = Mock()
-#     mock_crawler_process_class.return_value = mock_process
-
-#     # Start crawling
-#     crawler.start()
-
-#     # Verify process was created with correct settings
-#     mock_crawler_process_class.assert_called_once_with(crawler.settings)
-
-#     # Verify crawl method was called
-#     mock_process.crawl.assert_called_once()
-#     mock_process.start.assert_called_once()
-
-
-@pytest.fixture(autouse=True)
-def cleanup():
-    # Setup - nothing needed
-    yield
-    # Cleanup after each test
-    if os.path.exists("test_output"):
-        for file in os.listdir("test_output"):
-            os.remove(os.path.join("test_output", file))
-        os.rmdir("test_output")
+def test_output_directory_creation():
+    """Test that output directory is created if it doesn't exist"""
+    start_url = "https://example.com"
+    output_dir = "test_output_dir"
+    
+    # Ensure directory doesn't exist
+    if os.path.exists(output_dir):
+        os.rmdir(output_dir)
+    
+    crawler = DomainCrawler(start_url=start_url, output_dir=output_dir)
+    assert os.path.exists(output_dir)
+    
+    # Cleanup
+    os.rmdir(output_dir) 

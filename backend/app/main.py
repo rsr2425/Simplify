@@ -11,6 +11,7 @@ import logging
 import os
 from backend.app.crawler import DomainCrawler
 from backend.app.vectorstore import get_all_unique_source_of_docs_in_collection_DUMB
+from enum import Enum
 
 app = FastAPI()
 
@@ -21,6 +22,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class IngestStatus(Enum):
+    RECEIVED = "RECEIVED"
+    FAILURE = "FAILURE"
+
+
+class IngestRequest(BaseModel):
+    topic: str
+    url: str
+
+
+class IngestResponse(BaseModel):
+    status: IngestStatus
 
 
 class UrlInput(BaseModel):
@@ -46,10 +61,11 @@ class TopicsResponse(BaseModel):
     sources: List[str]
 
 
-@app.post("/api/ingest/")
-async def ingest_documentation(input_data: UrlInput):
+# TODO maybe call this /api/scan/ just to be consistent and match FE?
+@app.post("/api/ingest/", response_model=IngestResponse)
+async def ingest_documentation(input_data: IngestRequest):
     print(f"Received url {input_data.url}")
-    return {"status": "received"}
+    return IngestResponse(status=IngestStatus.RECEIVED)
 
 
 @app.post("/api/problems/")
