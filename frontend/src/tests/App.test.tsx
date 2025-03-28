@@ -8,14 +8,14 @@ describe('App', () => {
     render(<App />);
     
     // Check for title
-    expect(screen.getByText('Simplifi')).toBeInTheDocument();
+    expect(screen.getByText('SimpliFi')).toBeInTheDocument();
     
     // Check for input fields
     expect(screen.getByLabelText('Source Documentation')).toBeInTheDocument();
     expect(screen.getByLabelText('Quiz focus?')).toBeInTheDocument();
     
     // Check for buttons
-    expect(screen.getByText('Pull Source Docs')).toBeInTheDocument();
+    expect(screen.getByText('Scan')).toBeInTheDocument();
     expect(screen.getByText('Generate')).toBeInTheDocument();
   });
 });

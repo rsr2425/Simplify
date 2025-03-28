@@ -4,7 +4,7 @@ function Header() {
   return (
     <Box sx={{ mb: 4 }}>
       <Typography variant="h2" component="h1" align="center">
-        Simplifi
+        SimpliFi
       </Typography>
     </Box>
   );

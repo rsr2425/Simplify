@@ -1,14 +1,15 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import Topics from '../../components/Topics';
-import { vi } from 'vitest';
 
 describe('Topics Component', () => {
-  const mockOnTopicChange = vi.fn();
+  const mockOnTopicChange = jest.fn();
+  const mockFetch = jest.fn();
+  global.fetch = mockFetch;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    // Clear fetch mock before each test
-    vi.spyOn(global, 'fetch').mockClear();
+    jest.clearAllMocks();
+    mockFetch.mockClear();
   });
 
   it('shows loading state initially', () => {
@@ -20,11 +21,11 @@ describe('Topics Component', () => {
 
   it('displays topics after successful fetch', async () => {
     const mockTopics = { sources: ['Topic 1', 'Topic 2', 'Topic 3'] };
-    vi.spyOn(global, 'fetch').mockImplementationOnce(() =>
+    mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve(mockTopics),
-      } as Response)
+      })
     );
 
     render(<Topics onTopicChange={mockOnTopicChange} />);
@@ -44,11 +45,11 @@ describe('Topics Component', () => {
   });
 
   it('handles API error correctly', async () => {
-    vi.spyOn(global, 'fetch').mockImplementationOnce(() =>
+    mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: false,
         status: 500,
-      } as Response)
+      })
     );
 
     render(<Topics onTopicChange={mockOnTopicChange} />);
@@ -63,11 +64,11 @@ describe('Topics Component', () => {
 
   it('calls onTopicChange when topic is selected', async () => {
     const mockTopics = { sources: ['Topic 1', 'Topic 2'] };
-    vi.spyOn(global, 'fetch').mockImplementationOnce(() =>
+    mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve(mockTopics),
-      } as Response)
+      })
     );
 
     render(<Topics onTopicChange={mockOnTopicChange} />);
@@ -88,11 +89,11 @@ describe('Topics Component', () => {
 
   it('handles malformed API response correctly', async () => {
     const malformedResponse = { wrongKey: [] };
-    vi.spyOn(global, 'fetch').mockImplementationOnce(() =>
+    mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve(malformedResponse),
-      } as Response)
+      })
     );
 
     render(<Topics onTopicChange={mockOnTopicChange} />);
@@ -106,7 +107,7 @@ describe('Topics Component', () => {
   });
 
   it('handles network errors correctly', async () => {
-    vi.spyOn(global, 'fetch').mockImplementationOnce(() =>
+    mockFetch.mockImplementationOnce(() =>
       Promise.reject(new Error('Network error'))
     );
 

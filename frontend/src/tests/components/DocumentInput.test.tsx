@@ -15,14 +15,14 @@ describe('DocumentInput', () => {
     render(<DocumentInput />);
     
     const input = screen.getByLabelText('Source Documentation');
-    const button = screen.getByText('Pull Source Docs');
+    const button = screen.getByText('Scan');
     
     await act(async () => {
       await fireEvent.change(input, { target: { value: 'https://example.com' } });
       await fireEvent.click(button);
     });
     
-    expect(mockFetch).toHaveBeenCalledWith('/api/crawl/', {
+    expect(mockFetch).toHaveBeenCalledWith('/api/ingest/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: 'https://example.com' }),
@@ -40,7 +40,7 @@ describe('DocumentInput', () => {
     
     // First submit a URL
     const input = screen.getByLabelText('Source Documentation');
-    const button = screen.getByText('Pull Source Docs');
+    const button = screen.getByText('Scan');
     
     await act(async () => {
       await fireEvent.change(input, { target: { value: 'https://example.com' } });

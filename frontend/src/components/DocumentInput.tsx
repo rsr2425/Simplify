@@ -7,7 +7,7 @@ function DocumentInput() {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch('/api/crawl/', {
+      const response = await fetch('/api/ingest/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ function DocumentInput() {
           onChange={handleUrlChange}
         />
         <Button variant="contained" onClick={handleSubmit}>
-          Pull Source Docs
+          Scan
         </Button>
       </Box>
       {showSuccess && (
