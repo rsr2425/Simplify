@@ -6,14 +6,42 @@ import ProblemAnswer from './components/ProblemAnswer';
 import Topics from './components/Topics';
 import { useState } from 'react';
 import { Problem } from './types/Problem';
+import './styles/global.css';
 
 const theme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
-      main: '#1976d2',
+      main: '#90caf9',
     },
     background: {
-      default: '#f5f5f5',
+      default: '#1a1a1a',
+      paper: '#242424',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: 'rgba(255, 255, 255, 0.7)',
+    },
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundImage: `
+            linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+          `,
+          backgroundSize: '20px 20px',
+          backgroundPosition: '-1px -1px',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+        },
+      },
     },
   },
 });
@@ -95,9 +123,19 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container 
+        maxWidth="md" 
+        sx={{ 
+          py: 4,
+          '& .MuiPaper-root': {
+            backgroundColor: 'background.paper',
+            backdropFilter: 'blur(10px)',
+            borderRadius: 2,
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          },
+        }}
+      >
         <Header />
-        <DocumentInput />
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} md={4}>
             <Topics onTopicChange={handleTopicChange} />
@@ -106,6 +144,7 @@ function App() {
             <QuizGenerator onProblemsGenerated={handleProblemsGenerated} />
           </Grid>
         </Grid>
+        <DocumentInput />
 
         {problems.map((problem, index) => (
           <Box key={index} sx={{ mb: 4 }}>
