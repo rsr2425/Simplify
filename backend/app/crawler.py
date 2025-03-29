@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class WebsiteSpider(CrawlSpider):
     """
     A Scrapy spider for crawling documentation websites and extracting content.
-    
+
     This spider follows links within the allowed domain and extracts the main content
     from each page, saving it to a text file. It attempts to find content within <main>,
     <article> or content div tags, falling back to the full body if none are found.
@@ -36,7 +36,7 @@ class WebsiteSpider(CrawlSpider):
 
     def __init__(self, start_url, output_dir, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         self.start_urls = [start_url]
         self.allowed_domains = [urlparse(start_url).netloc]
         self.output_dir = output_dir
@@ -51,7 +51,6 @@ class WebsiteSpider(CrawlSpider):
                 follow=True,
             ),
         )
-
 
     def parse_item(self, response):
         """
@@ -149,7 +148,7 @@ class DomainCrawler:
     def start(self):
         """
         Start the crawling process.
-        
+
         This method initiates the crawler and blocks until crawling is complete.
         The extracted content will be saved to the configured output directory.
         """

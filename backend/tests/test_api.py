@@ -5,7 +5,13 @@ client = TestClient(app)
 
 
 def test_crawl_endpoint():
-    response = client.post("/api/ingest/", json={"url": "https://example.com"})
+    response = client.post(
+        "/api/ingest/",
+        json={
+            "url": "https://example.com",
+            "topic": "LangChain RAG Tutorial",
+        },
+    )
     assert response.status_code == 200
     assert response.json() == {"status": "RECEIVED"}
 
