@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simplifi-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: simplifi-backend
+  template:
+    metadata:
+      labels:
+        app: simplifi-backend
+    spec:
+      containers:
+      - name: simplifi-backend-container
+        image: gcr.io/documentation-tutor/simplifi
+        ports:
+        - containerPort: 7860 
