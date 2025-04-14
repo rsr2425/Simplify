@@ -28,5 +28,4 @@ images:
 # Optional timeout setting (in seconds)
 timeout: '1800s'
 
-# options:
-#   logging: CLOUD_LOGGING_ONLY 
+logging: CLOUD_LOGGING_ONLY 
