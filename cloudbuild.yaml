@@ -8,13 +8,13 @@ steps:
   args: ['push', 'us-east1-docker.pkg.dev/documentation-tutor/simplifi-repo/simplifi-app:v0']
 
 # Deploy container image to GKE
-# - name: 'gcr.io/cloud-builders/gke-deploy'
-#   args:
-#   - run
-#   - --filename=k8s/
-#   - --location=us-east1
-#   - --cluster=simplifi-cluster
-#   - --image=us-east1-docker.pkg.dev/documentation-tutor/simplifi-repo/simplifi-app:v0
+- name: 'gcr.io/cloud-builders/gke-deploy'
+  args:
+  - run
+  - --filename=k8s/
+  - --location=us-east1
+  - --cluster=simplifi-cluster
+  - --image=us-east1-docker.pkg.dev/documentation-tutor/simplifi-repo/simplifi-app:v0
 
 # substitutions:
 #   _REGION: us-central1 # Default region
