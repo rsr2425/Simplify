@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: simplifi-backend-container
-        image: gcr.io/documentation-tutor/simplifi
+        image: us-east1-docker.pkg.dev/documentation-tutor/simplifi-repo/simplifi-app:v0
         ports:
         - containerPort: 7860 
