@@ -1,18 +1,18 @@
 steps:
-# Build the container image
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-east1-docker.pkg.dev/documentation-tutor/simplifi-repo/simplifi-app:v0', '.']
+# # Build the container image
+# - name: 'gcr.io/cloud-builders/docker'
+#   args: ['build', '-t', 'us-east1-docker.pkg.dev/documentation-tutor/simplifi-repo/simplifi-app:v0', '.']
 
-# Push the container image to Container Registry
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'us-east1-docker.pkg.dev/documentation-tutor/simplifi-repo/simplifi-app:v0']
+# # Push the container image to Container Registry
+# - name: 'gcr.io/cloud-builders/docker'
+#   args: ['push', 'us-east1-docker.pkg.dev/documentation-tutor/simplifi-repo/simplifi-app:v0']
 
 # Deploy container image to GKE
 - name: 'gcr.io/cloud-builders/gke-deploy'
   args:
   - run
   - --filename=k8s/
-  - --location=us-east1
+  - --location=us-east1-c
   - --cluster=simplifi-cluster
   - --image=us-east1-docker.pkg.dev/documentation-tutor/simplifi-repo/simplifi-app:v0
 
