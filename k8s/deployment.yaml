@@ -17,8 +17,11 @@ spec:
         image: us-east1-docker.pkg.dev/documentation-tutor/simplifi-repo/simplifi-app:v0
         ports:
         - containerPort: 7860
+        envFrom:
+        - secretRef:
+            name: simplifi-secrets
       volumes:
-      - name: simplifi-secrets
+      - name: simplifi-secrets-volume
         csi:
           driver: secrets-store-gke.csi.k8s.io
           readOnly: true
