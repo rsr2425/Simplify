@@ -16,4 +16,11 @@ spec:
       - name: simplifi-backend-container
         image: us-east1-docker.pkg.dev/documentation-tutor/simplifi-repo/simplifi-app:v0
         ports:
-        - containerPort: 7860 
+        - containerPort: 7860
+      volumes:
+      - name: simplifi-secrets
+        csi:
+          driver: secrets-store-gke.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: simplifi-secrets-provider
